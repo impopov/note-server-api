@@ -31,31 +31,31 @@ message CreateNoteResponse {
 }
 
 message GetNoteRequest {
-  int64 id=1;
+  int64 id = 1;
 }
 
 message GetNoteResponse {
-  Note note=1;
+  Note note = 1;
 }
 
 message GetAllNoteRequest{}
 
 message GetAllNoteResponse {
-  repeated Note note=1;
+  repeated Note note = 1;
 }
 
 message UpdateNoteRequest {
-  Note note=1;
+  Note note = 1;
 }
 
 message UpdateNoteResponse {
-  string status=1;
+  string status = 1;
 }
 
 message DeleteNoteRequest {
-  int64 id=1;
+  int64 id = 1;
 }
 
 message DeleteNoteResponse {
-  string status=1;
+  string status = 1;
 }
