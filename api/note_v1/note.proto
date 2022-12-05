@@ -4,14 +4,15 @@ package api.note_v1;
 
 option go_package = "github.com/impopov/note-server-api/pkg/note_v1";
 
-service NoteService {
+service NoteServiceV1 {
   rpc CreateNote (CreateNoteRequest) returns (CreateNoteResponse);
   rpc GetNote (GetNoteRequest) returns (GetNoteResponse);
-  rpc GetAllNote (GetAllNoteRequest) returns (GetAllNoteResponse);
-  rpc UpdateNote (UpdateNoteRequest) returns (UpdateNoteResponse);
-  rpc DeleteNote (DeleteNoteRequest) returns (DeleteNoteResponse);
+  rpc GetListNote (Empty) returns (GetListNoteResponse);
+  rpc UpdateNote (UpdateNoteRequest) returns (Empty);
+  rpc DeleteNote (DeleteNoteRequest) returns (Empty);
 }
 
+message Empty{}
 
 message Note {
   int64 id = 1;
@@ -38,9 +39,7 @@ message GetNoteResponse {
   Note note = 1;
 }
 
-message GetAllNoteRequest{}
-
-message GetAllNoteResponse {
+message GetListNoteResponse {
   repeated Note note = 1;
 }
 
@@ -48,14 +47,6 @@ message UpdateNoteRequest {
   Note note = 1;
 }
 
-message UpdateNoteResponse {
-  string status = 1;
-}
-
 message DeleteNoteRequest {
   int64 id = 1;
-}
-
-message DeleteNoteResponse {
-  string status = 1;
 }

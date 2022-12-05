@@ -2,10 +2,10 @@ package note_v1
 
 import desc "github.com/impopov/note-server-api/pkg/note_v1"
 
-type Note struct {
-	desc.UnimplementedNoteServiceServer
+type Implementation struct {
+	desc.UnimplementedNoteServiceV1Server
 }
 
-func NewNote() *Note {
-	return &Note{}
+func NewImplementation() *Implementation {
+	return &Implementation{}
 }

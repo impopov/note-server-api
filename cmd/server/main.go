@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/impopov/note-server-api/internal/app/api/note_v1"
-	desc "github.com/impopov/note-server-api/pkg/note_v1"
-	"google.golang.org/grpc"
 	"log"
 	"net"
+
+	noteV1 "github.com/impopov/note-server-api/internal/app/api/note_v1"
+	desc "github.com/impopov/note-server-api/pkg/note_v1"
+	"google.golang.org/grpc"
 )
 
 const port = ":50051"
@@ -18,7 +19,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	desc.RegisterNoteServiceServer(s, note_v1.NewNote())
+	desc.RegisterNoteServiceV1Server(s, noteV1.NewImplementation())
 
 	fmt.Println("Starting server on port", port)
 

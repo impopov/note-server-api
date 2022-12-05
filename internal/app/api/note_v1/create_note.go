@@ -7,13 +7,13 @@ import (
 	desc "github.com/impopov/note-server-api/pkg/note_v1"
 )
 
-func (n *Note) CreateNote(ctx context.Context, in *desc.CreateNoteRequest) (*desc.CreateNoteResponse, error) {
+func (n *Implementation) CreateNote(ctx context.Context, req *desc.CreateNoteRequest) (*desc.CreateNoteResponse, error) {
 	fmt.Println("--------------------------")
 	fmt.Println("Note created")
 
-	fmt.Println("Title:", in.GetTitle())
-	fmt.Println("Text:", in.GetText())
-	fmt.Println("Author:", in.GetAuthor())
+	fmt.Println("Title:", req.GetTitle())
+	fmt.Println("Text:", req.GetText())
+	fmt.Println("Author:", req.GetAuthor())
 
 	return &desc.CreateNoteResponse{
 		Id: 1,
