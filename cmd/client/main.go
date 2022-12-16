@@ -50,7 +50,7 @@ func main() {
 
 	case "2\n":
 		//Client call GetNote
-		res, err := client.GetNote(ctx, &desc.GetNoteRequest{Id: 2})
+		res, err := client.GetNote(ctx, &desc.GetNoteRequest{Id: 1})
 		if err != nil {
 			log.Println(err.Error())
 		}
@@ -73,7 +73,7 @@ func main() {
 	case "4\n":
 		//Client call UpdateNote
 		_, err := client.UpdateNote(ctx, &desc.UpdateNoteRequest{Note: &desc.Note{
-			Id:     1,
+			Id:     3,
 			Title:  "New Title",
 			Text:   "New Text",
 			Author: "New Author",
@@ -86,7 +86,7 @@ func main() {
 
 	case "5\n":
 		//Client call DeleteNote
-		_, err := client.DeleteNote(ctx, &desc.DeleteNoteRequest{Id: 1})
+		_, err := client.DeleteNote(ctx, &desc.DeleteNoteRequest{Id: 4})
 		if err != nil {
 			log.Println(err.Error())
 		}

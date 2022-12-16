@@ -3,25 +3,66 @@ package note_v1
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 
+	sq "github.com/Masterminds/squirrel"
 	desc "github.com/impopov/note-server-api/pkg/note_v1"
+	"github.com/jmoiron/sqlx"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (n *Implementation) GetListNote(ctx context.Context, req *desc.Empty) (*desc.GetListNoteResponse, error) {
-	fmt.Println("--------------------------")
-	fmt.Println("Get All notes")
+	dbDSN := fmt.Sprintf(
+		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
+		host, port, dbName, dbUser, dbPassword, sslMode,
+	)
 
-	allNotes := &desc.GetListNoteResponse{Note: []*desc.Note{{
-		Id:     1,
-		Title:  "Tom Sawyer and Huckleberry Finn",
-		Text:   "Right is right, and wrong is wrong, and a body ain't got no business doing wrong when he ain't ignorant and knows better.",
-		Author: "Mark Twain",
-	}, {
-		Id:     2,
-		Title:  "The Hitchhiker's Guide to the Galaxy",
-		Text:   "Answer is 42",
-		Author: "Douglas Adams",
-	}}}
+	db, err := sqlx.Open("pgx", dbDSN)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
 
-	return allNotes, nil
+	builder := sq.Select("id", "title", "text", "author", "created_at", "updated_at").
+		From(noteTable)
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notes []*desc.Note
+	var createdAt time.Time
+	var updatedAt time.Time
+
+	for rows.Next() {
+		var note desc.Note
+
+		err = rows.Scan(
+			&note.Id,
+			&note.Title,
+			&note.Text,
+			&note.Author,
+			&createdAt,
+			&updatedAt,
+		)
+		if err != nil {
+			log.Println("Error scanning", err)
+			return nil, err
+		}
+
+		note.CreatedAt = timestamppb.New(createdAt)
+		note.CreatedAt = timestamppb.New(updatedAt)
+
+		notes = append(notes, &note)
+	}
+
+	return &desc.GetListNoteResponse{Note: notes}, nil
 }

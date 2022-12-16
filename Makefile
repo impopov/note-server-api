@@ -16,7 +16,7 @@ LOCAL_MIGRATION_DSN="host=localhost port=54321 dbname=note-service user=note-ser
 install-goose:
 	go install github.com/pressly/goose/v3/cmd/goose@latest
 
-.PHONY: local-migrations-status
+.PHONY: local-migration-status
 local-migration-status:
 	goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} status -v
 
