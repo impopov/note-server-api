@@ -59,6 +59,7 @@ func main() {
 		fmt.Println("Title:", res.GetNote().GetTitle())
 		fmt.Println("Text:", res.GetNote().GetText())
 		fmt.Println("Author:", res.GetNote().GetAuthor())
+		fmt.Println("Updated at:", res.GetNote().GetUpdatedAt().AsTime())
 
 	case "3\n":
 		//Client call GetAllNote

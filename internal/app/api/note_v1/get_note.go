@@ -2,6 +2,7 @@ package note_v1
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -41,7 +42,8 @@ func (n *Implementation) GetNote(ctx context.Context, req *desc.GetNoteRequest) 
 	var text string
 	var author string
 	var createdAt time.Time
-	var updatedAt time.Time
+	var updatedAt sql.NullTime
+	var updatedAtPb *timestamppb.Timestamp
 
 	err = row.Scan(
 		&id,
@@ -55,12 +57,16 @@ func (n *Implementation) GetNote(ctx context.Context, req *desc.GetNoteRequest) 
 		return nil, err
 	}
 
+	if updatedAt.Valid {
+		updatedAtPb = timestamppb.New(updatedAt.Time)
+	}
+
 	return &desc.GetNoteResponse{Note: &desc.Note{
 		Id:        id,
 		Title:     title,
 		Text:      text,
 		Author:    author,
 		CreatedAt: timestamppb.New(createdAt),
-		UpdatedAt: timestamppb.New(updatedAt),
+		UpdatedAt: updatedAtPb,
 	}}, nil
 }

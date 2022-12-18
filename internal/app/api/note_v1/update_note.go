@@ -3,6 +3,7 @@ package note_v1
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -34,7 +35,20 @@ func (n *Implementation) UpdateNote(ctx context.Context, req *desc.UpdateNoteReq
 	if err != nil {
 		return nil, err
 	}
-	_ = db.QueryRowContext(ctx, query, args...)
+
+	res, err := db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if rows != 1 {
+		log.Fatalf("expected single row affected, got %d rows affected", rows)
+		return nil, err
+	}
 
 	return &desc.Empty{}, nil
 }
