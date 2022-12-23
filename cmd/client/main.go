@@ -74,7 +74,7 @@ func main() {
 	case "4\n":
 		//Client call UpdateNote
 		_, err := client.UpdateNote(ctx, &desc.UpdateNoteRequest{Note: &desc.Note{
-			Id:     3,
+			Id:     6,
 			Title:  "New Title",
 			Text:   "New Text",
 			Author: "New Author",
