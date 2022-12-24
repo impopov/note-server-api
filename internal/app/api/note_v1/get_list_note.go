@@ -10,7 +10,7 @@ import (
 func (i *Implementation) GetListNote(ctx context.Context, req *desc.Empty) (*desc.GetListNoteResponse, error) {
 	res, err := i.noteService.GetListNote(ctx, req)
 	if err != nil {
-		log.Println("err api")
+		log.Printf("Can't get all notes, err %s", err)
 	}
 
 	return res, nil

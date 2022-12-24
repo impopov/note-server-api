@@ -10,13 +10,12 @@ import (
 	"github.com/impopov/note-server-api/internal/repository/table"
 	desc "github.com/impopov/note-server-api/pkg/note_v1"
 	"github.com/jmoiron/sqlx"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type NoteRepository interface {
 	CreateNote(ctx context.Context, req *desc.CreateNoteRequest) (int64, error)
-	GetNote(ctx context.Context, req *desc.GetNoteRequest) (*desc.GetNoteResponse, error)
-	GetListNote(ctx context.Context, req *desc.Empty) (*desc.GetListNoteResponse, error)
+	GetNote(ctx context.Context, req *desc.GetNoteRequest) (Note, error)
+	GetListNote(ctx context.Context, req *desc.Empty) ([]Note, error)
 	UpdateNote(ctx context.Context, req *desc.UpdateNoteRequest) error
 	DeleteNote(ctx context.Context, req *desc.DeleteNoteRequest) error
 }
@@ -29,6 +28,15 @@ func NewRepository(db *sqlx.DB) NoteRepository {
 	return &repository{
 		db: db,
 	}
+}
+
+type Note struct {
+	Id        int64
+	Title     string
+	Text      string
+	Author    string
+	CreatedAt time.Time
+	UpdatedAt sql.NullTime
 }
 
 func (r *repository) CreateNote(ctx context.Context, req *desc.CreateNoteRequest) (int64, error) {
@@ -59,7 +67,9 @@ func (r *repository) CreateNote(ctx context.Context, req *desc.CreateNoteRequest
 	return id, nil
 }
 
-func (r *repository) GetNote(ctx context.Context, req *desc.GetNoteRequest) (*desc.GetNoteResponse, error) {
+func (r *repository) GetNote(ctx context.Context, req *desc.GetNoteRequest) (Note, error) {
+	var note Note
+
 	builder := sq.Select("id", "title", "text", "author", "created_at", "updated_at").
 		PlaceholderFormat(sq.Dollar).
 		From(table.Note).
@@ -67,51 +77,28 @@ func (r *repository) GetNote(ctx context.Context, req *desc.GetNoteRequest) (*de
 
 	query, args, err := builder.ToSql()
 	if err != nil {
-		return nil, err
+		return Note{}, err
 	}
 
 	row := r.db.QueryRowContext(ctx, query, args...)
 
-	var id int64
-	var title string
-	var text string
-	var author string
-	var createdAt time.Time
-	var updatedAt sql.NullTime
-	var updatedAtPb *timestamppb.Timestamp
-
 	err = row.Scan(
-		&id,
-		&title,
-		&text,
-		&author,
-		&createdAt,
-		&updatedAt,
+		&note.Id,
+		&note.Title,
+		&note.Text,
+		&note.Author,
+		&note.CreatedAt,
+		&note.UpdatedAt,
 	)
 	if err != nil {
-		return nil, err
+		return Note{}, err
 	}
 
-	if updatedAt.Valid {
-		updatedAtPb = timestamppb.New(updatedAt.Time)
-	}
-
-	return &desc.GetNoteResponse{Note: &desc.Note{
-		Id:        id,
-		Title:     title,
-		Text:      text,
-		Author:    author,
-		CreatedAt: timestamppb.New(createdAt),
-		UpdatedAt: updatedAtPb,
-	}}, nil
+	return note, nil
 }
 
-func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) (*desc.GetListNoteResponse, error) {
-	var notes []*desc.Note
-
-	var createdAt time.Time
-	var updatedAt sql.NullTime
-	var updatedAtPb *timestamppb.Timestamp
+func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) ([]Note, error) {
+	var notes []Note
 
 	builder := sq.Select("id", "title", "text", "author", "created_at", "updated_at").
 		From(table.Note)
@@ -128,32 +115,25 @@ func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) (*desc.Ge
 	defer rows.Close()
 
 	for rows.Next() {
-		var note desc.Note
+		var note Note
 
 		err = rows.Scan(
 			&note.Id,
 			&note.Title,
 			&note.Text,
 			&note.Author,
-			&createdAt,
-			&updatedAt,
+			&note.CreatedAt,
+			&note.UpdatedAt,
 		)
 		if err != nil {
 			log.Println("Error scanning", err)
 			return nil, err
 		}
 
-		if updatedAt.Valid {
-			updatedAtPb = timestamppb.New(updatedAt.Time)
-		}
-
-		note.CreatedAt = timestamppb.New(createdAt)
-		note.UpdatedAt = updatedAtPb
-
-		notes = append(notes, &note)
+		notes = append(notes, note)
 	}
 
-	return &desc.GetListNoteResponse{Note: notes}, nil
+	return notes, nil
 }
 
 func (r *repository) UpdateNote(ctx context.Context, req *desc.UpdateNoteRequest) error {
