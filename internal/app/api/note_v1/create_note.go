@@ -20,7 +20,7 @@ const (
 func (i *Implementation) CreateNote(ctx context.Context, req *desc.CreateNoteRequest) (*desc.CreateNoteResponse, error) {
 	res, err := i.noteService.CreateNote(ctx, req)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	return res, nil

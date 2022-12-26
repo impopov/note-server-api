@@ -36,12 +36,18 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		startGRPC()
+		err := startGRPC()
+		if err != nil {
+			log.Fatalf("failed starting gRPC: %s", err.Error())
+		}
 	}()
 
 	go func() {
 		defer wg.Done()
-		startHttp()
+		err := startHttp()
+		if err != nil {
+			log.Fatalf("failed starting http server: %s", err.Error())
+		}
 	}()
 
 	wg.Wait()
@@ -50,7 +56,6 @@ func main() {
 func startGRPC() error {
 	list, err := net.Listen("tcp", hostGrpc)
 	if err != nil {
-		log.Fatalf("failed to mapping port: %s", err.Error())
 		return err
 	}
 
@@ -73,12 +78,7 @@ func startGRPC() error {
 
 	fmt.Println("Starting GRPC server on port", hostGrpc)
 
-	if err = s.Serve(list); err != nil {
-		log.Fatalf("failed to serve:%s", err.Error())
-		return err
-	}
-
-	return nil
+	return s.Serve(list)
 }
 
 func startHttp() error {

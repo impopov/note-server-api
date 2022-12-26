@@ -15,29 +15,34 @@ service NoteServiceV1 {
       body: "*"
     };
   }
+
   rpc GetNote (GetNoteRequest) returns (GetNoteResponse) {
     option (google.api.http) = {
       post: "/note/v1/get-note"
       body: "*"
     };
   }
+
   rpc GetListNote (Empty) returns (GetListNoteResponse) {
     option (google.api.http) = {
       get: "/note/v1/get-list-note"
     };
   }
+
   rpc UpdateNote (UpdateNoteRequest) returns (Empty) {
     option (google.api.http) = {
       post: "/note/v1/update-note"
       body: "*"
     };
   }
+
   rpc DeleteNote (DeleteNoteRequest) returns (Empty) {
     option (google.api.http) = {
       post: "/note/v1/delete-note"
       body: "*"
     };
   }
+
 }
 
 message Empty{}
@@ -62,7 +67,7 @@ message CreateNoteResponse {
 }
 
 message GetNoteRequest {
-  int64 id = 1 [(validate.rules).uint64.gt = 1] ;
+  int64 id = 1 [(validate.rules).int64.gte = 1] ;
 }
 
 message GetNoteResponse {

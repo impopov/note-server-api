@@ -12,5 +12,5 @@ func (i *Implementation) GetNote(ctx context.Context, req *desc.GetNoteRequest) 
 		return nil, err
 	}
 
-	return res, err
+	return res, nil
 }

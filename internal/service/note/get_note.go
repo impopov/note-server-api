@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Service) GetNote(ctx context.Context, req *desc.GetNoteRequest) (*desc.GetNoteResponse, error) {
-	var res repo.Note
+	var res *repo.Note
 	var updatedAtPb *timestamppb.Timestamp
 
 	res, err := s.noteRepository.GetNote(ctx, req)

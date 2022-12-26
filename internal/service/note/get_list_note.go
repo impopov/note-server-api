@@ -13,7 +13,7 @@ func (s *Service) GetListNote(ctx context.Context, req *desc.Empty) (*desc.GetLi
 
 	notes, err := s.noteRepository.GetListNote(ctx, req)
 	if err != nil {
-		log.Printf("error srvice")
+		log.Printf("error service")
 		return nil, err
 	}
 
