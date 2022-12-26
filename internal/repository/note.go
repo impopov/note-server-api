@@ -15,7 +15,7 @@ import (
 type NoteRepository interface {
 	CreateNote(ctx context.Context, req *desc.CreateNoteRequest) (int64, error)
 	GetNote(ctx context.Context, req *desc.GetNoteRequest) (*Note, error)
-	GetListNote(ctx context.Context, req *desc.Empty) ([]Note, error)
+	GetListNote(ctx context.Context, req *desc.Empty) ([]*Note, error)
 	UpdateNote(ctx context.Context, req *desc.UpdateNoteRequest) error
 	DeleteNote(ctx context.Context, req *desc.DeleteNoteRequest) error
 }
@@ -91,7 +91,7 @@ func (r *repository) GetNote(ctx context.Context, req *desc.GetNoteRequest) (*No
 	return &note, nil
 }
 
-func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) ([]Note, error) {
+func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) ([]*Note, error) {
 	builder := sq.Select("id", "title", "text", "author", "created_at", "updated_at").
 		From(table.Note)
 
@@ -106,7 +106,7 @@ func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) ([]Note, 
 	}
 	defer rows.Close()
 
-	var notes []Note
+	var notes []*Note
 	for rows.Next() {
 		var note Note
 
@@ -122,7 +122,7 @@ func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) ([]Note, 
 			return nil, err
 		}
 
-		notes = append(notes, note)
+		notes = append(notes, &note)
 	}
 
 	return notes, nil
