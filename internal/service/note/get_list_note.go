@@ -18,8 +18,10 @@ func (s *Service) GetListNote(ctx context.Context, req *desc.Empty) (*desc.GetLi
 	}
 
 	for _, note := range notes {
-		var notePb desc.Note
+		var notePb *desc.Note
+
 		notePb.Id = note.Id
+
 		notePb.Info.Title = note.Title
 		notePb.Info.Text = note.Text
 		notePb.Info.Author = note.Author
@@ -30,7 +32,7 @@ func (s *Service) GetListNote(ctx context.Context, req *desc.Empty) (*desc.GetLi
 
 		notePb.CreatedAt = timestamppb.New(note.CreatedAt)
 
-		notesPb = append(notesPb, &notePb)
+		notesPb = append(notesPb, notePb)
 	}
 
 	return &desc.GetListNoteResponse{Note: notesPb}, nil

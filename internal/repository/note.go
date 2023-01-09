@@ -107,6 +107,7 @@ func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) ([]*Note,
 	defer rows.Close()
 
 	var notes []*Note
+
 	for rows.Next() {
 		var note Note
 
