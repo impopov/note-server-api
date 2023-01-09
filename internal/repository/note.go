@@ -43,7 +43,7 @@ func (r *repository) CreateNote(ctx context.Context, req *desc.CreateNoteRequest
 	builder := sq.Insert(table.Note).
 		PlaceholderFormat(sq.Dollar).
 		Columns("title, text, author").
-		Values(req.GetTitle(), req.GetText(), req.GetAuthor()).
+		Values(req.GetNote().GetTitle(), req.GetNote().GetText(), req.GetNote().GetAuthor()).
 		Suffix("returning id")
 
 	query, args, err := builder.ToSql()
@@ -129,12 +129,22 @@ func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) ([]*Note,
 }
 
 func (r *repository) UpdateNote(ctx context.Context, req *desc.UpdateNoteRequest) error {
-	builder := sq.Update(table.Note).PlaceholderFormat(sq.Dollar).SetMap(sq.Eq{
-		"title":      req.GetNote().GetTitle(),
-		"text":       req.GetNote().GetText(),
-		"author":     req.GetNote().GetAuthor(),
-		"updated_at": time.Now(),
-	}).Where(sq.Eq{"id": req.GetNote().GetId()})
+	builder := sq.Update(table.Note).
+		PlaceholderFormat(sq.Dollar).
+		Set("updated_at", time.Now()).
+		Where(sq.Eq{"id": req.GetId()})
+
+	if req.GetNote().GetTitle() != nil {
+		builder.Set("title", req.GetNote().GetTitle())
+	}
+
+	if req.GetNote().GetTitle() != nil {
+		builder.Set("text", req.GetNote().GetText())
+	}
+
+	if req.GetNote().GetTitle() != nil {
+		builder.Set("author", req.GetNote().GetAuthor())
+	}
 
 	query, args, err := builder.ToSql()
 	if err != nil {

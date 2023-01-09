@@ -22,10 +22,12 @@ func (s *Service) GetNote(ctx context.Context, req *desc.GetNoteRequest) (*desc.
 	}
 
 	return &desc.GetNoteResponse{Note: &desc.Note{
-		Id:        res.Id,
-		Title:     res.Title,
-		Text:      res.Text,
-		Author:    res.Author,
+		Id: res.Id,
+		Info: &desc.NoteInfo{
+			Title:  res.Title,
+			Text:   res.Text,
+			Author: res.Author,
+		},
 		CreatedAt: timestamppb.New(res.CreatedAt),
 		UpdatedAt: updatedAtPb,
 	}}, nil

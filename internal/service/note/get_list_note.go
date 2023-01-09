@@ -20,9 +20,9 @@ func (s *Service) GetListNote(ctx context.Context, req *desc.Empty) (*desc.GetLi
 	for _, note := range notes {
 		var notePb desc.Note
 		notePb.Id = note.Id
-		notePb.Title = note.Title
-		notePb.Text = note.Text
-		notePb.Author = note.Author
+		notePb.Info.Title = note.Title
+		notePb.Info.Text = note.Text
+		notePb.Info.Author = note.Author
 
 		if note.UpdatedAt.Valid {
 			notePb.UpdatedAt = timestamppb.New(note.UpdatedAt.Time)
