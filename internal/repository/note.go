@@ -7,26 +7,27 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/impopov/note-server-api/internal/model"
+	"github.com/impopov/note-server-api/internal/pkg/db"
 	"github.com/impopov/note-server-api/internal/repository/table"
 	desc "github.com/impopov/note-server-api/pkg/note_v1"
-	"github.com/jmoiron/sqlx"
 )
 
 type NoteRepository interface {
-	CreateNote(ctx context.Context, req *desc.CreateNoteRequest) (int64, error)
-	GetNote(ctx context.Context, req *desc.GetNoteRequest) (*Note, error)
-	GetListNote(ctx context.Context, req *desc.Empty) ([]*Note, error)
+	CreateNote(ctx context.Context, noteInfo *model.NoteInfo) (int64, error)
+	GetNote(ctx context.Context, id int64) (*model.Note, error)
+	GetListNote(ctx context.Context, req *desc.Empty) ([]*model.Note, error)
 	UpdateNote(ctx context.Context, req *desc.UpdateNoteRequest) error
 	DeleteNote(ctx context.Context, req *desc.DeleteNoteRequest) error
 }
 
 type repository struct {
-	db *sqlx.DB
+	client db.Client
 }
 
-func NewRepository(db *sqlx.DB) NoteRepository {
+func NewRepository(client db.Client) NoteRepository {
 	return &repository{
-		db: db,
+		client: client,
 	}
 }
 
@@ -39,11 +40,11 @@ type Note struct {
 	UpdatedAt sql.NullTime
 }
 
-func (r *repository) CreateNote(ctx context.Context, req *desc.CreateNoteRequest) (int64, error) {
+func (r *repository) CreateNote(ctx context.Context, noteInfo *model.NoteInfo) (int64, error) {
 	builder := sq.Insert(table.Note).
 		PlaceholderFormat(sq.Dollar).
 		Columns("title, text, author").
-		Values(req.GetNote().GetTitle(), req.GetNote().GetText(), req.GetNote().GetAuthor()).
+		Values(noteInfo.Title, noteInfo.Text, noteInfo.Author).
 		Suffix("returning id")
 
 	query, args, err := builder.ToSql()
@@ -51,7 +52,12 @@ func (r *repository) CreateNote(ctx context.Context, req *desc.CreateNoteRequest
 		return 0, err
 	}
 
-	row, err := r.db.QueryContext(ctx, query, args...)
+	q := db.Query{
+		Name:     "CreateNote",
+		QueryRow: query,
+	}
+
+	row, err := r.client.DB().QueryContext(ctx, q, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -67,31 +73,33 @@ func (r *repository) CreateNote(ctx context.Context, req *desc.CreateNoteRequest
 	return id, nil
 }
 
-func (r *repository) GetNote(ctx context.Context, req *desc.GetNoteRequest) (*Note, error) {
+func (r *repository) GetNote(ctx context.Context, id int64) (*model.Note, error) {
 	builder := sq.Select("id", "title", "text", "author", "created_at", "updated_at").
 		PlaceholderFormat(sq.Dollar).
 		From(table.Note).
-		Where(sq.Eq{"id": req.GetId()})
+		Where(sq.Eq{"id": id})
 
 	query, args, err := builder.ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	var note Note
-	r.db.QueryRowContext(ctx, query, args...).Scan(
-		&note.Id,
-		&note.Title,
-		&note.Text,
-		&note.Author,
-		&note.CreatedAt,
-		&note.UpdatedAt,
-	)
+	q := db.Query{
+		Name:     "GetNote",
+		QueryRow: query,
+	}
+
+	var note model.Note
+
+	err = r.client.DB().GetContext(ctx, &note, q, args...)
+	if err != nil {
+		return nil, err
+	}
 
 	return &note, nil
 }
 
-func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) ([]*Note, error) {
+func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) ([]*model.Note, error) {
 	builder := sq.Select("id", "title", "text", "author", "created_at", "updated_at").
 		From(table.Note)
 
@@ -100,30 +108,16 @@ func (r *repository) GetListNote(ctx context.Context, req *desc.Empty) ([]*Note,
 		return nil, err
 	}
 
-	rows, err := r.db.QueryContext(ctx, query, args...)
+	q := db.Query{
+		Name:     "GetListNote",
+		QueryRow: query,
+	}
+
+	var notes []*model.Note
+
+	err = r.client.DB().SelectContext(ctx, &notes, q, args...)
 	if err != nil {
 		return nil, err
-	}
-	defer rows.Close()
-
-	var notes []*Note
-
-	for rows.Next() {
-		var note Note
-
-		err = rows.Scan(
-			&note.Id,
-			&note.Title,
-			&note.Text,
-			&note.Author,
-			&note.CreatedAt,
-			&note.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		notes = append(notes, &note)
 	}
 
 	return notes, nil
@@ -152,12 +146,17 @@ func (r *repository) UpdateNote(ctx context.Context, req *desc.UpdateNoteRequest
 		return err
 	}
 
-	res, err := r.db.ExecContext(ctx, query, args...)
+	q := db.Query{
+		Name:     "UpdateNote",
+		QueryRow: query,
+	}
+
+	res, err := r.client.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}
 
-	rows, err := res.RowsAffected()
+	rows := res.RowsAffected()
 	if err != nil {
 		return err
 	}
@@ -175,12 +174,17 @@ func (r *repository) DeleteNote(ctx context.Context, req *desc.DeleteNoteRequest
 		return err
 	}
 
-	res, err := r.db.ExecContext(ctx, query, args...)
+	q := db.Query{
+		Name:     "DeleteNote",
+		QueryRow: query,
+	}
+
+	res, err := r.client.DB().ExecContext(ctx, q, args...)
 	if err != nil {
 		return err
 	}
 
-	rows, err := res.RowsAffected()
+	rows := res.RowsAffected()
 	if err != nil {
 		return err
 	}

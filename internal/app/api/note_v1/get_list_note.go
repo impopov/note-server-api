@@ -3,6 +3,7 @@ package note_v1
 import (
 	"context"
 
+	"github.com/impopov/note-server-api/internal/converter"
 	desc "github.com/impopov/note-server-api/pkg/note_v1"
 )
 
@@ -12,5 +13,5 @@ func (i *Implementation) GetListNote(ctx context.Context, req *desc.Empty) (*des
 		return nil, err
 	}
 
-	return res, nil
+	return &desc.GetListNoteResponse{Note: converter.ToDeskNoteList(res)}, nil
 }

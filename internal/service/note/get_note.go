@@ -3,33 +3,14 @@ package note
 import (
 	"context"
 
-	repo "github.com/impopov/note-server-api/internal/repository"
-	desc "github.com/impopov/note-server-api/pkg/note_v1"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"github.com/impopov/note-server-api/internal/model"
 )
 
-func (s *Service) GetNote(ctx context.Context, req *desc.GetNoteRequest) (*desc.GetNoteResponse, error) {
-	var res *repo.Note
-	var updatedAtPb *timestamppb.Timestamp
-
-	res, err := s.noteRepository.GetNote(ctx, req)
+func (s *Service) GetNote(ctx context.Context, id int64) (*model.Note, error) {
+	res, err := s.noteRepository.GetNote(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if res.UpdatedAt.Valid {
-		updatedAtPb = timestamppb.New(res.UpdatedAt.Time)
-	}
-
-	return &desc.GetNoteResponse{Note: &desc.Note{
-		Id: res.Id,
-		Info: &desc.NoteInfo{
-			Title:  res.Title,
-			Text:   res.Text,
-			Author: res.Author,
-		},
-		CreatedAt: timestamppb.New(res.CreatedAt),
-		UpdatedAt: updatedAtPb,
-	}}, nil
-
+	return res, nil
 }

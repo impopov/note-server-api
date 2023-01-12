@@ -2,98 +2,30 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"flag"
 	"log"
-	"net"
-	"net/http"
-	"sync"
 
-	grpcValidator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	noteV1 "github.com/impopov/note-server-api/internal/app/api/note_v1"
-	"github.com/impopov/note-server-api/internal/repository"
-	"github.com/impopov/note-server-api/internal/service/note"
-	desc "github.com/impopov/note-server-api/pkg/note_v1"
-	"github.com/jmoiron/sqlx"
-	"google.golang.org/grpc"
+	"github.com/impopov/note-server-api/internal/app"
 )
 
-const (
-	hostGrpc = "localhost:50051"
-	hostHttp = "localhost:8090"
+var pathConfig string
 
-	host       = "localhost"
-	port       = "54321"
-	dbUser     = "note-service-user"
-	dbPassword = "note-service-password"
-	dbName     = "note-service"
-	sslMode    = "disable"
-)
+func init() {
+	flag.StringVar(&pathConfig, "config", "config/config.json", "path to configuration file")
+}
 
 func main() {
-	wg := sync.WaitGroup{}
-	wg.Add(2)
+	flag.Parse()
 
-	go func() {
-		defer wg.Done()
-		err := startGRPC()
-		if err != nil {
-			log.Fatalf("failed starting gRPC: %s", err.Error())
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		err := startHttp()
-		if err != nil {
-			log.Fatalf("failed starting http server: %s", err.Error())
-		}
-	}()
-
-	wg.Wait()
-}
-
-func startGRPC() error {
-	list, err := net.Listen("tcp", hostGrpc)
-	if err != nil {
-		return err
-	}
-
-	dbDSN := fmt.Sprintf(
-		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
-		host, port, dbName, dbUser, dbPassword, sslMode,
-	)
-
-	db, err := sqlx.Open("pgx", dbDSN)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	noteRepository := repository.NewRepository(db)
-	noteService := note.NewService(noteRepository)
-
-	s := grpc.NewServer(grpc.UnaryInterceptor(grpcValidator.UnaryServerInterceptor()))
-	desc.RegisterNoteServiceV1Server(s, noteV1.NewImplementation(noteService))
-
-	fmt.Println("Starting GRPC server on port", hostGrpc)
-
-	return s.Serve(list)
-}
-
-func startHttp() error {
 	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
-	mux := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithInsecure()}
-	err := desc.RegisterNoteServiceV1HandlerFromEndpoint(ctx, mux, hostGrpc, opts)
+	a, err := app.NewApp(ctx, pathConfig)
 	if err != nil {
-		return err
+		log.Fatalf("failed to create app: %s", err.Error())
 	}
 
-	fmt.Println("Starting http server on port", hostHttp)
-
-	return http.ListenAndServe(hostHttp, mux)
+	err = a.Run()
+	if err != nil {
+		log.Fatalf("failed to run app: %s", err.Error())
+	}
 }
